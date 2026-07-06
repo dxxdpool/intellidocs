@@ -1,0 +1,25 @@
+import bcrypt from "bcrypt";
+import { toUserResponse } from "../mappers/user.mapper.js";
+import { UserRepository } from "../repositories/user.repository.js";
+import { RegisterUserData } from "../types/auth.types.js";
+
+export class AuthService {
+    constructor(private readonly userRepository: UserRepository) {}
+    async register(data: RegisterUserData) {
+        const existingUser = await this.userRepository.findByEmail(data.email);
+
+        if (existingUser) {
+            throw new Error("Email already exists");
+        }
+
+        const passwordHash = await bcrypt.hash(data.password, 12);
+
+        const user = await this.userRepository.create({
+            email: data.email,
+            name: data.name,
+            passwordHash,
+        });
+
+        return toUserResponse(user);
+    }
+}
