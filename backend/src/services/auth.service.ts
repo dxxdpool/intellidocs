@@ -1,5 +1,6 @@
 import bcrypt from "bcrypt";
-import { toUserResponse } from "../mappers/user.mapper.js";
+import { ConflictError } from "../errors/conflict-error.js";
+import { toUserDTO } from "../mappers/user.mapper.js";
 import { UserRepository } from "../repositories/user.repository.js";
 import { RegisterUserData } from "../types/auth.types.js";
 
@@ -9,7 +10,7 @@ export class AuthService {
         const existingUser = await this.userRepository.findByEmail(data.email);
 
         if (existingUser) {
-            throw new Error("Email already exists");
+            throw new ConflictError("Email already exists");
         }
 
         const passwordHash = await bcrypt.hash(data.password, 12);
@@ -20,6 +21,6 @@ export class AuthService {
             passwordHash,
         });
 
-        return toUserResponse(user);
+        return toUserDTO(user);
     }
 }

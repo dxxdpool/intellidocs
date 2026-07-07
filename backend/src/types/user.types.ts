@@ -4,7 +4,7 @@ export interface CreateUserData {
     name: string;
 }
 
-export interface UserResponse {
+export interface UserDTO {
     id: string;
     email: string;
     name: string;
