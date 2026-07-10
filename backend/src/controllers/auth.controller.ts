@@ -9,4 +9,9 @@ export class AuthController {
 
         res.status(201).json(user);
     });
+    readonly login = asyncHandler(async (req, res) => {
+        const user = await this.authService.login(req.body);
+
+        res.status(200).json(user);
+    });
 }

@@ -1,8 +1,10 @@
-import bcrypt from "bcrypt";
 import { ConflictError } from "../errors/conflict-error.js";
+import { UnauthorizedError } from "../errors/unauthorized-error.js";
 import { toUserDTO } from "../mappers/user.mapper.js";
 import { UserRepository } from "../repositories/user.repository.js";
-import { RegisterUserData } from "../types/auth.types.js";
+import { LoginUserData, RegisterUserData } from "../types/auth.types.js";
+import { generateAccessToken } from "../utils/jwt.js";
+import { hashPassword, verifyPassword } from "../utils/password.js";
 
 export class AuthService {
     constructor(private readonly userRepository: UserRepository) {}
@@ -13,7 +15,7 @@ export class AuthService {
             throw new ConflictError("Email already exists");
         }
 
-        const passwordHash = await bcrypt.hash(data.password, 12);
+        const passwordHash = await hashPassword(data.password);
 
         const user = await this.userRepository.create({
             email: data.email,
@@ -22,5 +24,28 @@ export class AuthService {
         });
 
         return toUserDTO(user);
+    }
+    async login(data: LoginUserData) {
+        const user = await this.userRepository.findByEmail(data.email);
+
+        if (!user) {
+            throw new UnauthorizedError("Invalid email or password");
+        }
+
+        const isValidPassword = await verifyPassword(
+            data.password,
+            user.passwordHash
+        );
+
+        if (!isValidPassword) {
+            throw new UnauthorizedError("Invalid email or password");
+        }
+
+        const accessToken = generateAccessToken(user.id);
+
+        return {
+            accessToken,
+            user: toUserDTO(user),
+        };
     }
 }
