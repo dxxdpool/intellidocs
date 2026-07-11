@@ -8,6 +8,11 @@ export class UserRepository {
             where: { email },
         });
     }
+    async findById(id: string) {
+        return this.prisma.user.findUnique({
+            where: { id },
+        });
+    }
     async create(data: CreateUserData) {
         return this.prisma.user.create({
             data,

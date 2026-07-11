@@ -1,4 +1,5 @@
 import jwt from "jsonwebtoken";
+
 import { env } from "../config/env.js";
 import { UnauthorizedError } from "../errors/unauthorized-error.js";
 import { JwtPayload } from "../types/auth.types.js";
@@ -14,15 +15,21 @@ export function generateAccessToken(userId: string): string {
 }
 
 export function verifyAccessToken(token: string): JwtPayload {
-    const payload = jwt.verify(token, env.JWT_SECRET);
+    try {
+        const payload = jwt.verify(token, env.JWT_SECRET);
 
-    if (
-        typeof payload !== "object" ||
-        payload === null ||
-        typeof payload.sub !== "string"
-    ) {
-        throw new UnauthorizedError("Invalid token");
+        if (
+            typeof payload !== "object" ||
+            payload === null ||
+            typeof payload.sub !== "string"
+        ) {
+            throw new UnauthorizedError("Invalid authentication token");
+        }
+
+        return {
+            sub: payload.sub,
+        };
+    } catch {
+        throw new UnauthorizedError("Invalid authentication token");
     }
-
-    return payload as JwtPayload;
 }
